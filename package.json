@@ -1,0 +1,29 @@
+{
+  "name": "pub-sub-js",
+  "version": "1.0.0",
+  "description": "NodeJS IoT SDK v2 Pub Sub JS Sample",
+  "homepage": "https://github.com/aws/aws-iot-device-sdk-js-v2",
+  "scripts": {
+    "mqtt": "node index.js --endpoint a1z6o09qvc5q0n-ats.iot.us-east-1.amazonaws.com --ca_file ./certs/AmazonRootCA1.pem --cert ./certs/b1e20a6b846cc5f0721b50697aefaf06b9d9499fe10d8bfa034bc5e594d5caff-certificate.pem.crt --key ./certs/b1e20a6b846cc5f0721b50697aefaf06b9d9499fe10d8bfa034bc5e594d5caff-private.pem.key"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aws/aws-iot-device-sdk-js-v2.git"
+  },
+  "contributors": [
+    "AWS SDK Common Runtime Team <aws-sdk-common-runtime@amazon.com>"
+  ],
+  "license": "Apache-2.0",
+  "main": "./index.js",
+  "dependencies": {
+    "aws-crt": "^1.14.5",
+    "aws-iot-device-sdk-v2": "^1.8.9",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "node-fetch": "^3.2.10",
+    "pg": "^8.8.0",
+    "postgres": "^3.3.3",
+    "sequelize": "^6.28.0",
+    "yargs": "^16.2.0"
+  }
+}
