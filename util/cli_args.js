@@ -163,7 +163,7 @@ function add_topic_message_arguments(yargs) {
       alias: "t",
       description: "Topic to publish to (optional).",
       type: "string",
-      default: "sub_salt",
+      default: "data",
     })
     .option("count", {
       alias: "n",

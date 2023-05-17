@@ -4,12 +4,17 @@ const mqtt = iotsdk.mqtt;
 const TextDecoder = require("util").TextDecoder;
 const yargs = require("yargs");
 const common_args = require("./util/cli_args");
+// var { useModel } = require("./models/register")
+const { bot } = require("./flogoBot/telegramBot")
 
 // env
 require("dotenv").config();
 
 // DB
 const sequelize = require("./config/db");
+const { log } = require("console");
+const { number } = require("yargs");
+var useModel = require("./models/register");
 
 // Register sequelize model
 let Register;
@@ -19,7 +24,7 @@ const setRegister = (register) => {
 };
 
 (function (tableName) {
-  var useModel = require("./models/register")(tableName);
+  useModel = useModel(tableName);
   setRegister(useModel.Register);
 })("subestacionSaltillo");
 
@@ -36,7 +41,7 @@ yargs
   .parse();
 
 const createRegister = async (array, tableName) => {
-  const element = Register.build({ register: array });
+  const element = Register.createRegister({ register: array });
   await element
     .save()
     .then((register) => console.log("Registro guardado. "))
@@ -55,6 +60,20 @@ const getRegister = async (id, tableName) => {
     });
 };
 
+// Obtiene los valores
+const getRegisters = async (tableName) => {
+  return await useModel(tableName)
+    .Register.find()
+    .then((data) => {
+      console.log(data.dataValues.register);
+    })
+    .catch((error) => {
+      console.log(error.message);
+    });
+};
+
+//getRegisters('usuarios');
+
 async function execute_session(connection, argv) {
   //getRegister(id);
   return new Promise(async (resolve, reject) => {
@@ -66,79 +85,202 @@ async function execute_session(connection, argv) {
       const on_publish = async (topic, payload) => {
         const json = decoder.decode(payload);
         const message = JSON.parse(json);
-        console.log(message); //mensaje en objeto de entrada
-        createRegister(message.d, "subestacionSaltillo");
-        date = message.ts.replace("T", " ").slice(0, 19);
-        HVACV1 = message.d[0].value;
-        HVACV2 = message.d[1].value;
-        HVACV3 = message.d[2].value;
-        HVACI1 = message.d[3].value;
-        HVACI2 = message.d[4].value;
-        HVACI3 = message.d[5].value;
-        HVACKWh_E = message.d[6].value;
-        comp200hpV1 = message.d[7].value;
-        comp200hpV2 = message.d[8].value;
-        comp200hpV3 = message.d[9].value;
-        comp200hpI1 = message.d[10].value;
-        comp200hpI2 = message.d[11].value;
-        comp200hpI3 = message.d[12].value;
-        comp200hpKWh_E = message.d[13].value;
-        newcomp200hpV1 = message.d[14].value;
-        newcomp200hpV2 = message.d[15].value;
-        newcomp200hpV3 = message.d[16].value;
-        newcomp200hpI1 = message.d[17].value;
-        newcomp200hpI2 = message.d[18].value;
-        newcomp200hpI3 = message.d[19].value;
-        newcomp200hpKWh_E = message.d[20].value;
-        pinturaV1 = message.d[21].value;
-        pinturaV2 = message.d[22].value;
-        pinturaV3 = message.d[23].value;
-        pinturaI1 = message.d[24].value;
-        pinturaI2 = message.d[25].value;
-        pinturaI3 = message.d[26].value;
-        pinturaKWh_E = message.d[27].value;
-        nodo1comp150hpV1 = message.d[28].value;
-        nodo1comp150hpV2 = message.d[29].value;
-        nodo1comp150hpV3 = message.d[30].value;
-        nodo1comp150hpA1 = message.d[31].value;
-        nodo1comp150hpA2 = message.d[32].value;
-        nodo1comp150hpA3 = message.d[33].value;
-        nodo1comp15hpKWh = message.d[34].value;
-        nodo1tgn1hvacV1 = message.d[35].value;
-        nodo1tgn1hvacV2 = message.d[36].value;
-        nodo1tgn1hvacV3 = message.d[37].value;
-        nodo1tgn1hvacA1 = message.d[38].value;
-        nodo1tgn1hvacA2 = message.d[39].value;
-        nodo1tgn1hvacA3 = message.d[40].value;
-        nodo1tgn1hvacKWh = message.d[41].value;
-        DEVICE_ERROR_nodo2 = message.d[42].value;
-        nodo2tgn5comp150hpV1 = message.d[43].value;
-        nodo2tgn5comp150hpV2 = message.d[44].value;
-        nodo2tgn5comp150hpV3 = message.d[45].value;
-        nodo2tgn5comp150hpA1 = message.d[46].value;
-        nodo2tgn5comp150hpA2 = message.d[47].value;
-        nodo2tgn5comp150hpA3 = message.d[48].value;
-        nodo2tgn5comp150hpKWh = message.d[49].value;
-        nodo2tgn5comp250hpV1 = message.d[50].value;
-        nodo2tgn5comp250hpV2 = message.d[51].value;
-        nodo2tgn5comp250hpV3 = message.d[52].value;
-        nodo2tgn5comp250hpA1 = message.d[53].value;
-        nodo2tgn5comp250hpA2 = message.d[54].value;
-        nodo2tgn5comp250hpA3 = message.d[55].value;
-        nodo2tgn5comp250hpKWh = message.d[56].value;
+        console.log("mensaje",message); //mensaje en objeto de entrada
+        //createRegister(message.d, "subestacionSaltillo");
+        date = message.ts.replace("T", " ").slice(0, 19);       
+      
+      let arrayDatosAll = [];
+      let arrayPool = []; 
+      // const telegram = {
+      //   // Configuración por defecto
+      //   configTelegram: {
+      //     baseURL: 'https://api.telegram.org/bot',
+      //     token: '6283477638:AAHA8F4DcJFp36aFHK_u6fx9ExDy0-1HfF8',
+      //     chat_id: '523931042801',
+      //     parse_mode: 'MarkdownV2',
+      //   },
+      //   /** 
+      //    * @description Este método esta pensado para configurar dinámicante el bot de Telegram desde fuera y así poder enviar mensajes a múltiples bot
+      //    * @param {string} token Token API para la validación de nuestro Bot
+      //    * @param {string} chat_id El identificador del bor para comunicarnos con el Bot
+      //    */
+      //   config: (token, chat_id) => {
+      //     telegram.configTelegram.token = token || telegram.configTelegram.token || '';
+      //     telegram.config.chat_id = chat_id || telegram.configTelegram.chat_id || '';
+      //   },
+      //   /** 
+      //    * @description Este método se usa para enviar un mensaje a nuestro Bot
+      //    * @param {string} msn Mensaje que vamos a enviar
+      //    * @param {string} type Es el tipo de mensaje. 'text': Es un mensaje de texto, 'whatever is': Envia una imagen
+      //    * @return 
+      //    */
+      //   send: async (msn = '', type = 'text') => {
+      //     const { baseURL, token, chat_id, parse_mode } = telegram.configTelegram;
+      //     const endPoint = type === 'text' ? 'sendMessage' : 'sendSticker';
+      //     const url = new URL(`${baseURL}${token}/${endPoint}`);
+      //     // Imagen de prueba
+      //     const image = 'https://s.tcdn.co/8a1/9aa/8a19aab4-98c0-37cb-a3d4-491cb94d7e12/19.png';
+      //     const params = {
+      //       chat_id: chat_id,
+      //       parse_mode: parse_mode
+      //     };
+      //     const hasText = type === 'text';
+      //     params[hasText ? 'text' : 'sticker'] = hasText ? msn : image;
+      //     Object.keys(params).forEach(key => url.searchParams.append(key, params[key]))
+      //     return await (await fetch(url)).json().catch(error => error);
+      //   },
+      // };
+      // for (let index = 0; index < message.length; index++) {
+        console.log("Value de lo que quiero evaluar", message.d[0].value);
+        if (message.d[0].value>35) {
+          // telegram.send("El voltaje de "+message.d[0].tag+" esta fuera de rango");
+          bot.send()
+      //     const TOKEN = '6283477638:AAHA8F4DcJFp36aFHK_u6fx9ExDy0-1HfF8';
+      // const CHAT_ID = '523931042801';
+      // const MESSAGE_TEXT = 'Hola, este es un mensaje automático.';
 
-        dataPoolHVAC = `63ceba0798fb2e3be69e9f8a|SD|DL:0.0.0:AT.0.0.0|${date}|0|0|0|${HVACV1}|${HVACV2}|${HVACV3}|${HVACI1}|${HVACI2}|${HVACI3}|${HVACKWh_E}|${nodo1tgn1hvacV1}|${nodo1tgn1hvacV2}|${nodo1tgn1hvacV3}|${nodo1tgn1hvacA1}|${nodo1tgn1hvacA2}|${nodo1tgn1hvacA3}|${nodo1tgn1hvacKWh}|0|0`;
+      // fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json'
+      //   },
+      //   body: JSON.stringify({
+      //     chat_id: CHAT_ID,
+      //     text: MESSAGE_TEXT
+      //   })
+      // })
+      // .then(response => {
+      //   if (response.ok) {
+      //     console.log('Mensaje enviado correctamente.');
+      //   } else {
+      //     console.log('Error al enviar mensaje.');
+      //   }
+      // })
+      // .catch(error => {
+      //   console.log(error);
+      // });
+
+//       export const telegram = {
+//   // Configuración por defecto
+//   configTelegram: {
+//     baseURL: 'https://api.telegram.org/bot',
+//     token: '',
+//     chat_id: '',
+//     parse_mode: 'MarkdownV2',
+//   },
+//   /** 
+//    * @description Este método esta pensado para configurar dinámicante el bot de Telegram desde fuera y así poder enviar mensajes a múltiples bot
+//    * @param {string} token Token API para la validación de nuestro Bot
+//    * @param {string} chat_id El identificador del bor para comunicarnos con el Bot
+//    */
+//   config: (token, chat_id) => {
+//     telegram.configTelegram.token = token || telegram.configTelegram.token || '';
+//     telegram.config.chat_id = chat_id || telegram.configTelegram.chat_id || '';
+//   },
+//   /** 
+//    * @description Este método se usa para enviar un mensaje a nuestro Bot
+//    * @param {string} msn Mensaje que vamos a enviar
+//    * @param {string} type Es el tipo de mensaje. 'text': Es un mensaje de texto, 'whatever is': Envia una imagen
+//    * @return 
+//    */
+//   send: async (msn = '', type = 'text') => {
+//     const { baseURL, token, chat_id, parse_mode } = telegram.configTelegram;
+//     const endPoint = type === 'text' ? 'sendMessage' : 'sendSticker';
+//     const url = new URL(`${baseURL}${token}/${endPoint}`);
+//     // Imagen de prueba
+//     const image = 'https://s.tcdn.co/8a1/9aa/8a19aab4-98c0-37cb-a3d4-491cb94d7e12/19.png';
+//     const params = {
+//       chat_id: chat_id,
+//       parse_mode: parse_mode
+//     };
+//     const hasText = type === 'text';
+//     params[hasText ? 'text' : 'sticker'] = hasText ? msn : image;
+//     Object.keys(params).forEach(key => url.searchParams.append(key, params[key]))
+//     return await (await fetch(url)).json().catch(error => error);
+//   },
+// };
+//               }       
+}             
+
+      function determinarTarjetas(array){  
+        let inicio = [];
+        let fin = [];
+        let datos = [];
+        array.map(ele=>{
+          if(ele.tag.includes('V1')){
+          inicio.push(array.indexOf(ele))    
+          }else if(ele.tag.includes('KWh')){
+            fin.push(array.indexOf(ele))
+          }});  
+          datos.push(inicio,fin)
+        
+        return datos;
+      }
+
+      let extras1 ='|SD|DL:0.0.0:AT.0.0.0|';
+      let extras2 = '|0|0|0|';
+      let extras3 = '|0|0';
+
+      function arrayDatos(array, id, fecha){
+        let array1=[];        
+        array1.push(id, extras1, fecha, extras2)                
+        
+        array1.push(array.map(ele=> ele.value).join("|"));    
+        array1.push(extras3)      
+        return array1.join('');
+      }
+
+      function tarjetas(datos){        
+        let contador = 0
+        while(contador < 8){
+          arrayDatosAll=message.d.slice(datos[0][contador], datos[1][contador]+1)
+          arrayPool.push(arrayDatos(arrayDatosAll, '63ceba0798fb2e3be69e9f8a', date))
+          contador++
+        }
+      }
+
+      tarjetas(determinarTarjetas(message.d))
+
+      let arrayValoresPoolHVCA=[];
+      let arrayHVCA = message.d.slice(0,7);        
+      let arrayN1TGN = message.d.slice(message.d.findIndex(m => m.tag === 'nodo1:tgn1hvacV1'), (message.d.findIndex(m => m.tag === 'nodo1:tgn1hvacV1')+7));
+               
+      arrayHVCA.map(i => arrayValoresPoolHVCA.push(i.value))
+      arrayN1TGN.map(i => arrayValoresPoolHVCA.push(i.value));
+
+      let arrayValoresPoolCompresores=[];
+      let arrayComp200 = message.d.slice(message.d.findIndex(m => m.tag === 'comp200hp:V1'), (message.d.findIndex(m => m.tag === 'comp200hp:V1')+14));
+
+      let arrayN1comp = message.d.slice(message.d.findIndex(m => m.tag === 'nodo1:comp150hpV1'), (message.d.findIndex(m => m.tag === 'nodo1:comp150hpV1')+7));
+
+      let arrayN2tng = message.d.slice(message.d.findIndex(m => m.tag === 'nodo2:tgn5comp150hpV1'), (message.d.findIndex(m => m.tag === 'nodo2:tgn5comp150hpV1')+14));
+              
+      arrayComp200.map(i => arrayValoresPoolCompresores.push(i.value));
+      arrayN1comp.map(i => arrayValoresPoolCompresores.push(i.value));
+      //arrayValoresPoolCompresores.push(message.d[42].value);
+      arrayN2tng.map(i => arrayValoresPoolCompresores.push(i.value));
+
+      let arrayValoresPoolPintura=[];
+      let arrayPintura = message.d.slice(message.d.findIndex(m => m.tag === 'pintura:V1'), (message.d.findIndex(m => m.tag === 'pintura:V1')+7));
+      arrayPintura.map(i => arrayValoresPoolPintura.push(i.value))
+
+      dataPoolHVAC = `63ceba0798fb2e3be69e9f8a|SD|DL:0.0.0:AT.0.0.0|${date}|0|0|0|${arrayValoresPoolHVCA.join('|')}0|0`;
+        
         //                                        0      1  2                 3      4 5 6      7             8               9               10            11              12            13                  14                15                16                17                18                19                  20                  21                  22                    23              24                    25                  26                  27                      28                   29                       30                      31                      32                    33                      34                        35                    36                        37                        38                    39                    40                          41                      42         43 44
-        dataPoolcompresores = `63cebced98fb2e3be69e9f90|SD|DL:0.0.0:AT.0.0.0|${date}|0|0|0|${comp200hpV1}|${comp200hpV2}|${comp200hpV3}|${comp200hpI1}|${comp200hpI2}|${comp200hpI3}|${comp200hpKWh_E}|${newcomp200hpV1}|${newcomp200hpV2}|${newcomp200hpV3}|${newcomp200hpI1}|${newcomp200hpI2}|${newcomp200hpI3}|${newcomp200hpKWh_E}|${nodo1comp150hpV1}|${nodo1comp150hpV2}|${nodo1comp150hpV3}|${nodo1comp150hpA1}|${nodo1comp150hpA2}|${nodo1comp150hpA3}|${nodo1comp15hpKWh}|${DEVICE_ERROR_nodo2}|${nodo2tgn5comp150hpV1}|${nodo2tgn5comp150hpV2}|${nodo2tgn5comp150hpV3}|${nodo2tgn5comp150hpA1}|${nodo2tgn5comp150hpA2}|${nodo2tgn5comp150hpA3}|${nodo2tgn5comp150hpKWh}|${nodo2tgn5comp250hpV1}|${nodo2tgn5comp250hpV2}|${nodo2tgn5comp250hpV3}|${nodo2tgn5comp250hpA1}|${nodo2tgn5comp250hpA2}|${nodo2tgn5comp250hpA3}|${nodo2tgn5comp250hpKWh}|0|0`;
-        dataPoolPintura = `63ced3ad98fb2e3be69ea9c4|SD|DL:0.0.0:AT.0.0.0|${date}|0|0|0|${pinturaV1}|${pinturaV2}|${pinturaV3}|${pinturaI1}|${pinturaI2}|${pinturaI3}|${pinturaKWh_E}|0|0`;
+        
+      dataPoolcompresores = `63cebced98fb2e3be69e9f90|SD|DL:0.0.0:AT.0.0.0|${date}|0|0|0|${arrayValoresPoolCompresores.join("|")}0|0`;
 
-        let poolSaltillo = [dataPoolHVAC, dataPoolcompresores, dataPoolPintura];
+      dataPoolPintura = `63ced3ad98fb2e3be69ea9c4|SD|DL:0.0.0:AT.0.0.0|${date}|0|0|0|${arrayValoresPoolPintura.join('|')}0|0`;
+
+      console.log("HVAC \n",dataPoolHVAC);
+      console.log("Compresores \n",dataPoolcompresores);
+      console.log("Pintura \n",dataPoolPintura);
+      
+      let poolSaltillo = [dataPoolHVAC, dataPoolcompresores, dataPoolPintura];
         // data sent loop
         //HOST
-
-        const delay = async (ms = 1000) =>
-          new Promise((resolve) => setTimeout(resolve, ms));
-
+      const delay = async (ms = 1000) =>
+        new Promise((resolve) => setTimeout(resolve, ms));
         async function delaySendData() {
           for (let i = 0; i < poolSaltillo.length; i++) {
             const host = process.env.HOSTNAME;
@@ -148,7 +290,7 @@ async function execute_session(connection, argv) {
             //crear cliente
             const client1 = new net.Socket();
             //Conexion al puerto y host especificado
-            client1.connect(port, host, function () {
+            client1.connect(port, function () {
               //Log conexion establecido
               console.log(`Client 1 :Connected to server on port ${port}`);
               client1.write(poolSaltillo[i]);
@@ -209,8 +351,9 @@ async function execute_session(connection, argv) {
 async function main(argv) {
   // db connection
   try {
-    sequelize.authenticate();
-    sequelize.sync();
+
+    // sequelize.authenticate();
+    // sequelize.sync();
     console.log("Connected to DB");
   } catch (error) {
     console.log("Unable to connect to DB:", error);
