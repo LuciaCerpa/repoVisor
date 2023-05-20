@@ -91,8 +91,13 @@ async function execute_session(connection, argv) {
       
       let arrayDatosAll = [];
       let arrayPool = []; 
+
+      
+      
+      //aqui empieza el codigo de telegram
+
       // const telegram = {
-      //   // Configuración por defecto
+      // Configuración por defecto
       //   configTelegram: {
       //     baseURL: 'https://api.telegram.org/bot',
       //     token: '6283477638:AAHA8F4DcJFp36aFHK_u6fx9ExDy0-1HfF8',
@@ -118,7 +123,7 @@ async function execute_session(connection, argv) {
       //     const { baseURL, token, chat_id, parse_mode } = telegram.configTelegram;
       //     const endPoint = type === 'text' ? 'sendMessage' : 'sendSticker';
       //     const url = new URL(`${baseURL}${token}/${endPoint}`);
-      //     // Imagen de prueba
+      // Imagen de prueba
       //     const image = 'https://s.tcdn.co/8a1/9aa/8a19aab4-98c0-37cb-a3d4-491cb94d7e12/19.png';
       //     const params = {
       //       chat_id: chat_id,
@@ -130,6 +135,12 @@ async function execute_session(connection, argv) {
       //     return await (await fetch(url)).json().catch(error => error);
       //   },
       // };
+
+
+
+
+//aqui quise traer todos los valores obtenidos de message para validarlos y que se mandará el msj automatico pero no se envia
+
       // for (let index = 0; index < message.length; index++) {
         console.log("Value de lo que quiero evaluar", message.d[0].value);
         if (message.d[0].value>35) {
@@ -160,8 +171,14 @@ async function execute_session(connection, argv) {
       //   console.log(error);
       // });
 
-//       export const telegram = {
-//   // Configuración por defecto
+
+
+
+
+      // Este es el mismo codigo del de arriba pero modificando algunos valores pero tampoco me funcionó
+
+//   export const telegram = {
+   // Configuración por defecto
 //   configTelegram: {
 //     baseURL: 'https://api.telegram.org/bot',
 //     token: '',
@@ -187,7 +204,7 @@ async function execute_session(connection, argv) {
 //     const { baseURL, token, chat_id, parse_mode } = telegram.configTelegram;
 //     const endPoint = type === 'text' ? 'sendMessage' : 'sendSticker';
 //     const url = new URL(`${baseURL}${token}/${endPoint}`);
-//     // Imagen de prueba
+    // Imagen de prueba
 //     const image = 'https://s.tcdn.co/8a1/9aa/8a19aab4-98c0-37cb-a3d4-491cb94d7e12/19.png';
 //     const params = {
 //       chat_id: chat_id,
@@ -201,6 +218,7 @@ async function execute_session(connection, argv) {
 // };
 //               }       
 }             
+
 
       function determinarTarjetas(array){  
         let inicio = [];
